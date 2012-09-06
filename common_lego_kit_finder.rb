@@ -8,20 +8,18 @@ class CommonLegoKitFinder
     "http://www.bricklink.com/catalogItemIn.asp?P=#{part_number}&in=S"
   end
 
-  def get_html_page
-    page = Nokogiri::HTML(open(search_url(53787)))
+  def get_kit_list_for_part(part_number)
+    page = Nokogiri::HTML(open(search_url(part_number)))
 
     table = page.xpath('//table[1][@border="0" and @cellpadding="3" and @cellspacing="0" and @width="100%"][preceding::p]')
 
-    puts table
-
     trs = table.xpath('./tr')
-
-    puts 'trs!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    puts trs
-    #tds = table.at_xpath('./tbody')
-
-    # puts "the tds!"
-    # puts tds
+    trs.each_with_index do |row, index|
+      if index > 2
+        puts "row number: #{index}"
+        tds = row.xpath('./td')
+        puts tds
+      end
+    end
   end
 end
