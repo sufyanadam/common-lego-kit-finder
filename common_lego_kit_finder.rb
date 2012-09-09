@@ -3,6 +3,11 @@ require 'open-uri'
 
 class CommonLegoKitFinder
   attr_accessor :lego_parts
+  attr_accessor :unknown_parts
+
+  def initialize
+    @unknown_parts = []
+  end
 
   def search_url(part_number)
     "http://www.bricklink.com/catalogItemIn.asp?P=#{part_number}&in=S"
@@ -10,19 +15,25 @@ class CommonLegoKitFinder
 
   def extract_part_numbers
     file_contents = File.read "/Users/Sufyan/Dropbox/lego_part_numbers"
-
-    part_numbers = file_contents.scan /\w*\d+/
-    part_numbers.to_a
+    part_numbers = file_contents.gsub!('.DAT','' ).split
+    puts "found #{part_numbers.length} parts: #{part_numbers}"
+    part_numbers
   end
 
-  def get_kit_list_for_part(part_number)
-    puts "processing rows for part #{part_number}"
+  def get_kits_containing_part(part_number)
     found_kits = {}
     found_kits[part_number] = []
 
     page = Nokogiri::HTML(open(search_url(part_number)))
 
+    if page.xpath('//font[@size="+2"]').text == "No Item(s) were found.  Please try again!"
+      @unknown_parts << part_number
+    end
+
+    part_name = page.xpath('//table[@width="100%" and @border="0" and @cellpadding="10" and @cellspacing="0" and @bgcolor="#FFFFFF"]/tr/td/center/font/b').text
     table = page.xpath('//table[1][@border="0" and @cellpadding="3" and @cellspacing="0" and @width="100%"][preceding::p]')
+
+    puts "processing rows for part #{part_number}, #{part_name}"
 
     trs = table.xpath('./tr')
     trs.each_with_index do |row, index|
@@ -47,7 +58,7 @@ class CommonLegoKitFinder
         #kit = LegoKit.new(part_number, kit_number, kit_name, kit_description, kit_year)
 
         #found_kits[part_number] = kit
-        found_kits[part_number] << { :searched_part => part_number, :number => kit_number, :name => kit_name, :description => kit_description, :year => kit_year }
+        found_kits[part_number] << { :searched_part => part_number, :part_name => part_name, :qty_in_kit => qty_in_kit, :kit_number => kit_number, :kit_name => kit_name, :kit_description => kit_description, :year => kit_year }
       end
     end
 
