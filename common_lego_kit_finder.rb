@@ -2,27 +2,33 @@ require 'nokogiri'
 require 'open-uri'
 
 class CommonLegoKitFinder
-  attr_accessor :lego_parts
+  attr_accessor :found_parts
   attr_accessor :unknown_parts
+  attr_accessor :found_kits
 
   def initialize
     @unknown_parts = []
+    @found_parts = {}
+    @found_kits = {}
   end
 
   def search_url(part_number)
     "http://www.bricklink.com/catalogItemIn.asp?P=#{part_number}&in=S"
   end
 
-  def extract_part_numbers
-    file_contents = File.read "/Users/Sufyan/Dropbox/lego_part_numbers"
-    part_numbers = file_contents.gsub!('.DAT','' ).split
+  def get_file_contents(path)
+    file_contents = File.read path
+    file_contents
+  end
+
+  def extract_part_numbers_from(input)
+    part_numbers = input.gsub!('.DAT','' ).split
     puts "found #{part_numbers.length} parts: #{part_numbers}"
     part_numbers
   end
 
   def get_kits_containing_part(part_number)
-    found_kits = {}
-    found_kits[part_number] = []
+    @found_parts[part_number] = {:part_name => nil, :kits => []}
 
     page = Nokogiri::HTML(open(search_url(part_number)))
 
@@ -55,40 +61,27 @@ class CommonLegoKitFinder
         kit_description = tds[3].xpath('./font[2]/br/preceding-sibling::text()').text
         kit_year = tds[4].xpath('./font').text
 
-        #kit = LegoKit.new(part_number, kit_number, kit_name, kit_description, kit_year)
+        @found_parts[part_number][:part_name] = part_name
+        @found_parts[part_number][:kits] << { :kit_number => kit_number, :kit_name => kit_name, :kit_description => kit_description, :year => kit_year, :qty_in_kit => qty_in_kit }
 
-        #found_kits[part_number] = kit
-        found_kits[part_number] << { :searched_part => part_number, :part_name => part_name, :qty_in_kit => qty_in_kit, :kit_number => kit_number, :kit_name => kit_name, :kit_description => kit_description, :year => kit_year }
+        @found_kits[kit_number] = {:kit_name => kit_name, :kit_description => kit_description, :year => kit_year}
+        @found_kits[kit_number][:found_parts] ||= []
+        @found_kits[kit_number][:found_parts] << {:part_number => part_number, :part_name => part_name, :qty_in_kit => qty_in_kit}
+        @found_kits[kit_number][:missing_parts] ||= []
+        @found_kits[kit_number][:missing_parts] << {:part_number => part_number, :part_name => part_name}
       end
     end
 
-    found_kits
+    @found_parts
   end
-end
 
-class LegoPart
-  attr_accessor :part_number
-  attr_accessor :contained_in_kits
-  attr_accessor :part_image
-
-  def initialize(part_number, contained_in_kits)
-    @part_number = part_number
-    @contained_in_kits = contained_in_kits
-  end
-end
-
-class LegoKit
-  attr_accessor :searched_part
-  attr_accessor :kit_number
-  attr_accessor :kit_name
-  attr_accessor :kit_description
-  attr_accessor :kit_year
-  attr_accessor :kit_image
-
-  def initialize(searched_part, kit_number, kit_name, kit_description, kit_year)
-    @searched_part = searched_part
-    @kit_number = kit_number
-    @kit_name = kit_name
-    @kit_year = kit_year
+  def get_required_kits
+    puts "sorted!"
+    puts @found_kits.sort_by { |kit_number, kit_info| kit_info[:found_parts].length }.reverse!
+    # get the top 5 kits that contained most of the parts
+    # these kits contain all the parts you seek
+    found_parts = @found_kits.map { |kit, kit_info| kit_info[:found_parts]}
+    puts "the parts!!!!!!!"
+    puts found_parts
   end
 end

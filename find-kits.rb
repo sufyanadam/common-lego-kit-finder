@@ -3,35 +3,30 @@ require 'awesome_print'
 
 @finder = CommonLegoKitFinder.new
 
-#@parts = [53787, 55804]
+@parts = [53787, 55804]
+#@parts = [53787]
 
 #@parts = ["x344"]
 
 #@parts = @finder.extract_part_numbers
 
 def get_kits_containing(part_numbers)
-  kits = []
-
-  part_numbers.each do |pn|
-    kits << @finder.get_kits_containing_part(pn)
-  end
-
-  kits
+  part_numbers.map { |pn| @finder.get_kits_containing_part pn }
 end
 
 
-def identify_kit_occurrences_in(kits)
+def identify_kit_occurrences_in(parts_to_kits_hash)
   seen_kits = {}
 
-  kits.each do |k|
-    k.map do |key, kit_info_hash_array|
-      kit_info_hash_array.each do |info_hash|
+  parts_to_kits_hash.each do |kh|
+    kh.map do |part_number, kit_info_hash_array|
+      kit_info_hash_array[:kits].each do |info_hash|
         if seen_kits[info_hash[:kit_number]]
           seen_kits[info_hash[:kit_number]][:appearance_count] += 1
-          seen_kits[info_hash[:kit_number]][:contains_searched_parts] << key
-          seen_kits[info_hash[:kit_number]][:quantities] << { :part_number => key, :part_name => info_hash[:part_name], :qty => info_hash[:qty_in_kit] }
+          seen_kits[info_hash[:kit_number]][:contains_searched_parts] << part_number
+          seen_kits[info_hash[:kit_number]][:quantities] << { :part_number => part_number, :part_name => kit_info_hash_array[:part_name], :qty => info_hash[:qty_in_kit] }
         else
-          seen_kits[info_hash[:kit_number]] = { :appearance_count => 1, :contains_searched_parts => [key], :kit_name => info_hash[:kit_name], :quantities => [{ :part_number => key, :part_name => info_hash[:part_name], :qty => info_hash[:qty_in_kit] }], :description => info_hash[:kit_description], :year => info_hash[:year] }
+          seen_kits[info_hash[:kit_number]] = { :appearance_count => 1, :contains_searched_parts => [part_number], :kit_name => info_hash[:kit_name], :quantities => [{ :part_number => part_number, :part_name => kit_info_hash_array[:part_name], :qty => info_hash[:qty_in_kit] }], :description => info_hash[:kit_description], :year => info_hash[:year] }
         end
       end
     end
@@ -69,5 +64,6 @@ def rank_kits_and_display(kit_occurrences)
 end
 
 kits = get_kits_containing @parts
+puts kits
 occurrences = identify_kit_occurrences_in kits
 rank_kits_and_display occurrences
