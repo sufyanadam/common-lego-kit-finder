@@ -54,7 +54,9 @@ class CommonLegoKitFinder
     trs.each_with_index do |row, row_number|
       puts "processing rows for part #{part_number}, #{part_name}"
 
-      results[part_number][:kits] << process_row(row, row_number)
+      if row_number > 2
+        results[part_number][:kits] << process_row(row, row_number)
+      end
 
       #   results[kit_number] = {:kit_name => kit_name, :kit_description => kit_description, :year => kit_year}
       #   results[kit_number][:found_parts] ||= []
@@ -67,32 +69,30 @@ class CommonLegoKitFinder
   end
 
   def process_row(row, row_number)
-    if row_number > 2
-      puts "getting row #{row_number}"
+    puts "getting row #{row_number}"
 
-      tds = row.xpath('./td')
+    tds = row.xpath('./td')
 
-      if tds.count < 6
-        puts "could not process row #{row_number} because td layout is not acceptable"
-        puts tds
-        puts "sorry..."
-        return
-      end
-
-      qty_in_kit = /\d/.match(tds[1].text)[0]
-      kit_number = /\d+-*\d*/.match(tds[2].text)[0]
-      kit_name = tds[3].xpath('./font/b').text
-      kit_description = tds[3].xpath('./font[2]/br/preceding-sibling::text()').text
-      kit_year = tds[4].xpath('./font').text
-
-      {
-        :kit_number => kit_number,
-        :kit_name => kit_name,
-        :kit_description => kit_description,
-        :year => kit_year,
-        :qty_in_kit => qty_in_kit
-      }
+    if tds.count < 6
+      puts "could not process row #{row_number} because td layout is not acceptable"
+      puts tds
+      puts "sorry..."
+      return
     end
+
+    qty_in_kit = /\d/.match(tds[1].text)[0]
+    kit_number = /\d+-*\d*/.match(tds[2].text)[0]
+    kit_name = tds[3].xpath('./font/b').text
+    kit_description = tds[3].xpath('./font[2]/br/preceding-sibling::text()').text
+    kit_year = tds[4].xpath('./font').text
+
+    return {
+            :kit_number => kit_number,
+            :kit_name => kit_name,
+            :kit_description => kit_description,
+            :year => kit_year,
+            :qty_in_kit => qty_in_kit
+           }
   end
 
 
