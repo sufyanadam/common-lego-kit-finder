@@ -28,21 +28,22 @@ class CommonLegoKitFinder
   end
 
   def get_kits_containing_part(part_number)
+    p 'called!!!!!!!!!'
     @found_parts[part_number] = {:part_name => nil, :kits => []}
 
     page = Nokogiri::HTML(open(search_url(part_number)))
 
-    if page.xpath('//font[@size="+2"]').text == "No Item(s) were found.  Please try again!"
+    if page.xpath('//font[@size="+2"]').text.include? "No Item(s) were found.  Please try again!"
       @unknown_parts << part_number
     end
 
     part_name = page.xpath('//table[@width="100%" and @border="0" and @cellpadding="10" and @cellspacing="0" and @bgcolor="#FFFFFF"]/tr/td/center/font/b').text
-    table = page.xpath('//table[1][@border="0" and @cellpadding="3" and @cellspacing="0" and @width="100%"][preceding::p]')
-
-    puts "processing rows for part #{part_number}, #{part_name}"
-
+    table = page.xpath('//table[@border="0" and @cellpadding="3" and @cellspacing="0" and @width="100%"][preceding::p]')
     trs = table.xpath('./tr')
+
     trs.each_with_index do |row, index|
+      puts "processing rows for part #{part_number}, #{part_name}"
+
       if index > 2
         puts "getting row #{index}"
 

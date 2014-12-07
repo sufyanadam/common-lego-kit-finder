@@ -6,12 +6,15 @@ require 'awesome_print'
 @parts = [53787, 55804]
 #@parts = [53787]
 
+# @parts = [55804]
 #@parts = ["x344"]
-
-#@parts = @finder.extract_part_numbers
+file_contents = @finder.get_file_contents "/Users/Sufyan/Dropbox/lego_part_numbers"
+#@parts = @finder.extract_part_numbers_from file_contents
 
 def get_kits_containing(part_numbers)
-  part_numbers.map { |pn| @finder.get_kits_containing_part pn }
+  kits = []
+  part_numbers.each { |pn| kits << @finder.get_kits_containing_part(pn) }
+  kits
 end
 
 
@@ -64,6 +67,7 @@ def rank_kits_and_display(kit_occurrences)
 end
 
 kits = get_kits_containing @parts
-puts kits
+p kits, kits.size, kits.map(&:keys)
+exit
 occurrences = identify_kit_occurrences_in kits
 rank_kits_and_display occurrences
