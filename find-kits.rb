@@ -12,9 +12,7 @@ file_contents = @finder.get_file_contents "/Users/Sufyan/Dropbox/lego_part_numbe
 #@parts = @finder.extract_part_numbers_from file_contents
 
 def get_kits_containing(part_numbers)
-  kits = []
-  part_numbers.each { |pn| kits << @finder.get_kits_containing_part(pn) }
-  kits
+  @finder.get_kits_containing_parts part_numbers
 end
 
 
