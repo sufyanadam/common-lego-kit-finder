@@ -29,7 +29,7 @@ class CommonLegoKitFinder
 
   def get_kits_containing_parts(part_numbers)
     part_numbers.map do |part_number|
-      get_kits_containing(part_number)
+      get_kits_containing part_number
     end
   end
 
@@ -52,25 +52,19 @@ class CommonLegoKitFinder
     }
 
     trs.each_with_index do |row, row_number|
-      puts "processing rows for part #{part_number}, #{part_name}"
+      puts "processing row #{row_number} for part #{part_number}, #{part_name}"
 
       if row_number > 2
         results[part_number][:kits] << process_row(row, row_number)
       end
-
-      #   results[kit_number] = {:kit_name => kit_name, :kit_description => kit_description, :year => kit_year}
-      #   results[kit_number][:found_parts] ||= []
-      #   results[kit_number][:found_parts] << {:part_number => part_number, :part_name => part_name, :qty_in_kit => qty_in_kit}
-      #   results[:found_kits][kit_number][:missing_parts] ||= []
-      #   results[:found_kits][kit_number][:missing_parts] << {:part_number => part_number, :part_name => part_name}
     end
+
+    results[part_number][:top_kit] = results[part_number][:kits].find { |k| k[:qty_in_kit].to_i > (results[part_number][:top_kit] && results[part_number][:top_kit][:qty_in_kit]).to_i }
 
     results
   end
 
   def process_row(row, row_number)
-    puts "getting row #{row_number}"
-
     tds = row.xpath('./td')
 
     if tds.count < 6
@@ -91,7 +85,7 @@ class CommonLegoKitFinder
             :kit_name => kit_name,
             :kit_description => kit_description,
             :year => kit_year,
-            :qty_in_kit => qty_in_kit
+            :qty_in_kit => qty_in_kit,
            }
   end
 
