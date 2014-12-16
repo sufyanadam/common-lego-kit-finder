@@ -3,13 +3,15 @@ require 'awesome_print'
 
 @finder = CommonLegoKitFinder.new
 
-@parts = [53787, 55804]
+# @parts = [53787, 55804]
+# @parts = [32526, 32528, 6632, 32269]
+# @parts = [32526, 32528, 32269]
 #@parts = [53787]
 
 # @parts = [55804]
 #@parts = ["x344"]
 file_contents = @finder.get_file_contents "/Users/Sufyan/Dropbox/lego_part_numbers"
-#@parts = @finder.extract_part_numbers_from file_contents
+@parts = @finder.extract_part_numbers_from file_contents
 
 def get_kits_containing(part_numbers)
   @finder.get_kits_containing_parts part_numbers
@@ -64,8 +66,14 @@ def rank_kits_and_display(kit_occurrences)
   puts @finder.unknown_parts
 end
 
-kits = get_kits_containing @parts
-p kits, kits.size, kits.map(&:keys)
+def find_minimum_kits(part_numbers)
+  parts_in_kits = get_kits_containing @parts
+  found_parts = parts_in_kits.map { |pik| pik.keys }.flatten
+  most_frequently_occurring_kit = @finder.get_most_occurring_kit(parts_in_kits)
+  parts_in_most_frequently_occurring_kit = parts_in_kits.select { |hash| hash[hash.keys.first] && hash[hash.keys.first][:kits] && hash[hash.keys.first][:kits].map { |kit_hash| kit_hash && kit_hash[:kit_number] == most_frequently_occurring_kit  } }.map { |found| found.keys }.flatten
+  parts_not_found_in_most_frequently_occurring_kit = found_parts - parts_in_most_frequently_occurring_kit
+  p 'the parts not found in this round:', parts_not_found_in_most_frequently_occurring_kit
+  p 'the kit(s) you must find to get all the parts you need is', most_frequently_occurring_kit
+end
+find_minimum_kits @parts
 exit
-occurrences = identify_kit_occurrences_in kits
-rank_kits_and_display occurrences

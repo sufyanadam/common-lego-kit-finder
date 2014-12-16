@@ -89,6 +89,21 @@ class CommonLegoKitFinder
     }
   end
 
+  def get_most_occurring_kit(parts_in_kits)
+    seen_kits = {}
+
+    parts_in_kits.each do |part_info_hash|
+      part_info_hash.each do |part_number, info_hash|
+        info_hash && info_hash[:kits] && info_hash[:kits].each do |kit_info_hash|
+          next if kit_info_hash.nil?
+          seen_kits[kit_info_hash[:kit_number]] = seen_kits[kit_info_hash[:kit_number]] ? seen_kits[kit_info_hash[:kit_number]] + 1 : 1
+        end
+      end
+    end
+
+    seen_kits.max { |a, b| a[1]  <=>  b[1] }
+  end
+
   def get_required_kits
     puts "sorted!"
     puts @found_kits.sort_by { |kit_number, kit_info| kit_info[:found_parts].length }.reverse!
